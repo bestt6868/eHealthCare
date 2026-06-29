@@ -23,6 +23,7 @@ public class ChuyenKhoaDAO {
           + "INNER JOIN LICH_CA_TRUC lct ON lct.maBacSi = bs.maBacSi "
           + "INNER JOIN CA_TRUC ct ON ct.maCaTruc = lct.maCaTruc "
           + "     AND ct.ngayTruc = CAST(GETDATE() AS DATE) "
+          + "     AND CAST(GETDATE() AS TIME) BETWEEN ct.gioBatDau AND ct.gioKetThuc "
           + "WHERE ck.trangThai = 1 "
           + "ORDER BY ck.tenKhoa";
         return runQuery(sql);

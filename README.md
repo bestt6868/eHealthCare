@@ -124,7 +124,7 @@ java -cp "out;mssql-jdbc-x.x.x.jre11.jar" Main
 - [ ] Nhập BHYT hợp lệ → hiện tên BN, chuyển màn hình chọn khoa
 - [ ] Chọn khoa → chỉ hiển thị bác sĩ của khoa đó
 - [ ] Nhấn BỎ QUA → hệ thống tự chọn bác sĩ ít người chờ
-- [ ] Sau in phiếu 3 giây → tự reset về màn hình nhập BHYT
+- [ ] Sau in phiếu 10 giây → tự reset về màn hình nhập BHYT
 
 ### Phân hệ Admin
 - [ ] Đăng nhập sai 3 lần → tài khoản bị khóa
@@ -138,7 +138,7 @@ java -cp "out;mssql-jdbc-x.x.x.jre11.jar" Main
 
 ## Lưu ý nghiệp vụ quan trọng
 
-1. **Mã BHYT** là chuỗi 15 ký tự (`VARCHAR(15)`), không phải số nguyên.
+1. **Mã BHYT** là chuỗi 15 ký tự (`VARCHAR(15)`).
 2. **Số thứ tự** độc lập theo từng bác sĩ mỗi ngày.
 3. **Khoa** chỉ hiện trong Kiosk khi có ít nhất 1 bác sĩ đang hoạt động.
 4. **Điều phối tự động:** Nhiều bác sĩ cùng số người chờ → chọn ngẫu nhiên (`ORDER BY NEWID()`).

@@ -22,8 +22,10 @@ public class CaTrucDAO {
      */
     public List<CaTruc> layDanhSachCaTruc() {
         String sqlCaTruc = "SELECT maCaTruc, tenCaTruc, gioBatDau, gioKetThuc, ngayTruc, maNhanVien "
-                         + "FROM CA_TRUC ORDER BY ngayTruc DESC, gioBatDau ASC";
-
+                            + "FROM CA_TRUC "
+                            + "WHERE ngayTruc > CAST(GETDATE() AS DATE) "
+                            + "   OR (ngayTruc = CAST(GETDATE() AS DATE) AND gioKetThuc > CAST(GETDATE() AS TIME)) "
+                            + "ORDER BY ngayTruc DESC, gioBatDau ASC";
         List<CaTruc> danhSach = new ArrayList<>();
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlCaTruc);
@@ -77,21 +79,55 @@ public class CaTrucDAO {
      * @return true nếu xóa thành công
      */
     public boolean xoaCaTruc(int maCaTruc) {
-        String sqlXoaLich = "DELETE FROM LICH_CA_TRUC WHERE maCaTruc = ?";
-        String sqlXoaCa   = "DELETE FROM CA_TRUC WHERE maCaTruc = ?";
-
+        String sqlLayThongTin = "SELECT ngayTruc FROM CA_TRUC WHERE maCaTruc = ?";
+        String sqlLayBacSi    = "SELECT maBacSi FROM LICH_CA_TRUC WHERE maCaTruc = ?";
+        String sqlXoaHangCho  = "DELETE FROM HANG_CHO WHERE maBacSi = ? AND ngay = ?";
+        String sqlXoaLich     = "DELETE FROM LICH_CA_TRUC WHERE maCaTruc = ?";
+        String sqlXoaCa       = "DELETE FROM CA_TRUC WHERE maCaTruc = ?";
+    
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement ps1 = conn.prepareStatement(sqlXoaLich);
-                 PreparedStatement ps2 = conn.prepareStatement(sqlXoaCa)) {
-
-                ps1.setInt(1, maCaTruc);
-                ps1.executeUpdate();
-                ps2.setInt(1, maCaTruc);
-                ps2.executeUpdate();
+            try {
+                // 1. Lấy ngayTruc
+                LocalDate ngay = null;
+                try (PreparedStatement ps = conn.prepareStatement(sqlLayThongTin)) {
+                    ps.setInt(1, maCaTruc);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) ngay = rs.getDate(1).toLocalDate();
+                    }
+                }
+                // 2. Lấy danh sách bác sĩ + xóa hàng chờ tương ứng
+                if (ngay != null) {
+                    List<Integer> dsBacSi = new ArrayList<>();
+                    try (PreparedStatement ps = conn.prepareStatement(sqlLayBacSi)) {
+                        ps.setInt(1, maCaTruc);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) dsBacSi.add(rs.getInt(1));
+                        }
+                    }
+                    if (!dsBacSi.isEmpty()) {
+                        try (PreparedStatement psXoaHC = conn.prepareStatement(sqlXoaHangCho)) {
+                            for (int maBacSi : dsBacSi) {
+                                psXoaHC.setInt(1, maBacSi);
+                                psXoaHC.setDate(2, Date.valueOf(ngay));
+                                psXoaHC.addBatch();
+                            }
+                            psXoaHC.executeBatch();
+                        }
+                    }
+                }
+                // 3. Xóa lịch + ca trực
+                try (PreparedStatement ps1 = conn.prepareStatement(sqlXoaLich);
+                     PreparedStatement ps2 = conn.prepareStatement(sqlXoaCa)) {
+                    ps1.setInt(1, maCaTruc);
+                    ps1.executeUpdate();
+                    ps2.setInt(1, maCaTruc);
+                    ps2.executeUpdate();
+                }
+    
                 conn.commit();
                 return true;
-
+    
             } catch (SQLException e) {
                 conn.rollback();
                 System.err.println("[CaTrucDAO] Lỗi xoaCaTruc – rollback: " + e.getMessage());

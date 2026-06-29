@@ -13,7 +13,6 @@ import javax.swing.*;
 public class Main {
 
     public static void main(String[] args) {
-        // Dùng look-and-feel hệ điều hành để giao diện đẹp hơn
         datLookAndFeel();
 
         String cheDoChay = layCheDo(args);
@@ -33,10 +32,6 @@ public class Main {
         }
     }
 
-    /**
-     * Lấy chế độ chạy từ tham số dòng lệnh.
-     * Nếu không có tham số → trả về chuỗi rỗng (hiện dialog chọn).
-     */
     private static String layCheDo(String[] args) {
         if (args != null && args.length > 0) {
             return args[0].trim();
@@ -44,9 +39,6 @@ public class Main {
         return "";
     }
 
-    /**
-     * Hiển thị dialog để chọn phân hệ khi không có tham số dòng lệnh.
-     */
     private static void hienDialogChon() {
         SwingUtilities.invokeLater(() -> {
             String[] luaChon = {"🖥  Kiosk (Bệnh nhân)", "🔧  Quản trị (Nhân viên)", "Thoát"};
@@ -70,14 +62,27 @@ public class Main {
     }
 
     /**
-     * Đặt Look-and-Feel phù hợp với hệ điều hành hiện tại.
+     * Dùng Nimbus L&F — hiển thị đúng màu setBackground() trên mọi hệ điều hành.
+     * KHÔNG dùng getSystemLookAndFeelClassName() vì macOS Aqua và Windows L&F
+     * tự vẽ lại nút theo kiểu native, bỏ qua setBackground() hoàn toàn.
      */
     private static void datLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+
+                    // Ghi đè màu nền nút mặc định của Nimbus
+                    UIManager.getLookAndFeelDefaults().put("Button.background",
+                            new javax.swing.plaf.ColorUIResource(0xEAEEF7));
+
+                    return;
+                }
+            }
+            // Nimbus không có → dùng Cross-platform (Metal) thay thế
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception e) {
-            // Giữ nguyên look-and-feel mặc định nếu không thể thay đổi
-            System.err.println("Không thể đặt Look-and-Feel hệ thống: " + e.getMessage());
+            System.err.println("Không thể đặt Look-and-Feel: " + e.getMessage());
         }
     }
 }

@@ -10,6 +10,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.print.*;
 import java.time.format.DateTimeFormatter;
+import javax.print.PrintService;
+
 
 /**
  * Tiện ích in phiếu khám bệnh.

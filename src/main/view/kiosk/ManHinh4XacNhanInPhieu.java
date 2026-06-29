@@ -19,7 +19,7 @@ import java.awt.print.PrinterException;
  * Luồng đúng (fix threading):
  *   1. doInBackground()  → gọi controller.dangKy() (DB, background thread)
  *   2. done()            → gọi PrinterUtil.inPhieu() (dialog/máy in, EDT)
- *   3. done()            → hiển thị số thứ tự, đặt Timer reset 10 giây
+ *   3. done()            → hiển thị số thứ tự, đặt Timer reset 5 giây
  */
 public class ManHinh4XacNhanInPhieu extends JPanel {
 
