@@ -238,11 +238,17 @@ public class QuanLyCaTrucPanel extends JPanel {
         CaTruc ct = new CaTruc(0, txtTen.getText().trim(), gioBD, gioKT, ngay,
                 nv != null ? nv.getMaNhanVien() : 1);
 
-        List<String> xungDot = caTrucCtrl.themCaTrucVoiKiemTraXungDot(ct, chon);
+        List<String> xungDot;
+        try {
+            xungDot = caTrucCtrl.themCaTrucVoiKiemTraXungDot(ct, chon);
+        } catch (RuntimeException ex) {
+            Throwable goc = ex.getCause() != null ? ex.getCause() : ex;
+            return "❌ Lỗi: " + goc.getClass().getName() + " - " + goc.getMessage();
+        }
         if (!xungDot.isEmpty())
             return "Bị xung đột lịch: " + String.join(", ", xungDot);
 
-        hienThongBao("✅ Đã thêm ca trực: " + ct.getTenCaTruc(), UIConstants.MAU_THANH_CONG);
+        hienThongBao("Đã thêm ca trực: " + ct.getTenCaTruc(), UIConstants.MAU_THANH_CONG);
         return null;
     }
 

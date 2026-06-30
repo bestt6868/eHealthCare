@@ -149,28 +149,30 @@ public class CaTrucDAO {
      * @return true nếu bị xung đột
      */
     public boolean kiemTraXungDot(int maBacSi, LocalDate ngay,
-                                  LocalTime gioBatDau, LocalTime gioKetThuc) {
+                              LocalTime gioBatDau, LocalTime gioKetThuc) {
         String sql = "SELECT COUNT(*) FROM CA_TRUC ct "
-                   + "INNER JOIN LICH_CA_TRUC lct ON lct.maCaTruc = ct.maCaTruc "
-                   + "WHERE lct.maBacSi = ? AND ct.ngayTruc = ? "
-                   + "AND ct.gioBatDau < ? AND ct.gioKetThuc > ?";
+                    + "INNER JOIN LICH_CA_TRUC lct ON lct.maCaTruc = ct.maCaTruc "
+                    + "WHERE lct.maBacSi = ? AND ct.ngayTruc = ? "
+                    + "AND ct.gioBatDau < CAST(? AS TIME) AND ct.gioKetThuc > CAST(? AS TIME)";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (Connection conn = DatabaseConfig.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, maBacSi);
-            ps.setDate(2, Date.valueOf(ngay));
-            ps.setTime(3, Time.valueOf(gioKetThuc));
-            ps.setTime(4, Time.valueOf(gioBatDau));
+        ps.setInt(1, maBacSi);
+        ps.setDate(2, Date.valueOf(ngay));
+        ps.setTime(3, Time.valueOf(gioKetThuc));
+        ps.setTime(4, Time.valueOf(gioBatDau));
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("[CaTrucDAO] Lỗi kiemTraXungDot: " + e.getMessage());
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1) > 0;
         }
         return false;
+    } catch (SQLException e) {
+        System.err.println("[CaTrucDAO] Lỗi kiemTraXungDot: " + e.getMessage());
+        // Quan trọng: KHÔNG return false ở đây, phải ném lỗi ra ngoài
+        throw new RuntimeException("Không thể kiểm tra xung đột lịch trực. Vui lòng thử lại.", e);
     }
+}
 
     // ─── Phương thức nội bộ ───────────────────────────────────
 
